@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>WebZHost AI</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2e;--line:#24344b;--text:#eaf1fb;--muted:#9aabc1;--accent:#42c7f5}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#17334b 0,transparent 45%),var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:flex;justify-content:center}
+main{width:min(820px,100%);padding:24px 16px 18px;display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;padding:8px 2px 20px;border-bottom:1px solid var(--line)}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#39c5f4,#2874df);display:grid;place-items:center;font-weight:800;color:#061321}
+h1{font-size:18px;margin:0}header p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.status{margin-left:auto;font-size:11px;color:#9de5bc;border:1px solid #28583f;padding:6px 9px;border-radius:20px}
+#chat{flex:1;overflow:auto;padding:22px 2px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:88%;padding:12px 14px;border:1px solid var(--line);border-radius:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:var(--panel)}.user{align-self:flex-end;background:#123a55;border-color:#245b79}
+.welcome{color:var(--muted);font-size:13px;text-align:center;margin:auto 0}
+form{display:flex;gap:9px;padding-top:12px;border-top:1px solid var(--line)}
+textarea{flex:1;resize:none;min-height:48px;max-height:120px;border:1px solid var(--line);border-radius:14px;background:#101a2a;color:var(--text);padding:13px;font:inherit;outline:none}
+textarea:focus{border-color:var(--accent)}button{border:0;border-radius:13px;padding:0 18px;background:var(--accent);color:#061321;font-weight:750}
+button:disabled{opacity:.5}
+footer{text-align:center;color:var(--muted);font-size:11px;padding-top:12px}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo">W</div><div><h1>WebZHost AI</h1><p>Experimental self-hosted support assistant</p></div><span class="status">● Test build</span></header>
+<section id="chat"><div class="welcome">Ask a question about WebZHost.<br>English is the default; Bangla questions receive Bangla replies.</div></section>
+<form id="form"><textarea id="input" maxlength="1200" placeholder="Ask about WebZHost…" required></textarea><button id="send" type="submit">Send</button></form>
+<footer>Experimental model · No external AI API · <a href="https://webzhost.vercel.app/docs" target="_blank" rel="noopener">Documentation</a></footer>
+</main>
+<script>
+const chat=document.querySelector("#chat"),form=document.querySelector("#form"),input=document.querySelector("#input"),send=document.querySelector("#send");
+function add(text,who){const el=document.createElement("div");el.className="msg "+who;el.textContent=text;chat.append(el);chat.scrollTop=chat.scrollHeight;return el}
+form.addEventListener("submit",async e=>{e.preventDefault();const message=input.value.trim();if(!message)return;add(message,"user");input.value="";send.disabled=true;const waiting=add("Thinking…","bot");try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message})});const data=await r.json();waiting.textContent=data.answer||data.error||"No response.";if(data.detail)waiting.textContent+="\n\nTechnical detail: "+data.detail}catch(err){waiting.textContent="Could not reach the AI server. Please check the deployment logs."}finally{send.disabled=false;input.focus()}});
+input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
+</script>
+</body>
+</html>
