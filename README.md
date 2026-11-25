@@ -1,57 +1,43 @@
-# WebZHost AI — experimental Vercel project
+# WebZHost AI — Vercel + Hugging Face
 
-This is a **proof-of-concept**, not a verified production AI service.
+A small experimental WebZHost support chat. The GGUF model is hosted in the public Hugging Face repository and downloaded by the server into the Vercel Function's temporary `/tmp` storage when a warm instance needs it. Visitors do not download the model into their browsers.
 
-## What it does
+## Updated architecture
 
-- Serves a small chat page from `public/index.html`.
-- Provides `/api/health` and `/api/model` diagnostics.
-- Attempts server-side inference using `node-llama-cpp`.
-- Downloads the 58.6 MB Falcon-H1-Tiny-90M-Instruct Q4_K_M GGUF during the Vercel build, so visitors do not download the model into their browser.
-- Uses a tiny local JSON knowledge file and refuses unrelated questions by instruction.
+- Model source: `Zihad077/webzhost-ai-model` on Hugging Face.
+- Runtime: `node-llama-cpp` on a Vercel Node.js Function.
+- Model cache: `/tmp` within a Function instance. It is **not permanent** and can be cleared when Vercel replaces the instance. Hugging Face remains the persistent source of truth.
+- Knowledge: `data/knowledge.json`, containing only the verified basic project facts currently available.
+- Diagnostics: `/api/health` checks the service; `/api/model` checks that Hugging Face can serve the model; neither proves inference. Test `/api/chat` with a POST request through the chat page.
+
+## Deploy/update
+
+1. Upload the contents of this project to the root of the GitHub repository, replacing the matching files.
+2. Keep `package.json`, `vercel.json`, `api/`, `data/`, and `public/` in the repository root.
+3. Delete the old `scripts/download-model.mjs` file and the `scripts/` folder if empty. No build-time model download is used.
+4. In Vercel, redeploy the project.
+5. Test, in order: `/api/health`, `/api/model`, then send a short question from `/`.
 
 ## Important limitations
 
-1. The selected model is only 90M parameters and is English-focused. Bangla response quality is not guaranteed.
-2. `node-llama-cpp` uses native binaries. A Vercel deployment can fail if its Linux binary, native dependencies, or model bundle are not traced correctly.
-3. A successful `/api/health` response does **not** prove that inference works. Test `/api/model`, then `/api/chat`.
-4. The model is downloaded during build and included in the Function bundle. Vercel Hobby has a 100 MB static upload limit and a 250 MB Function bundle limit; this project relies on the model being included in the Function, not uploaded as a static asset. Confirm the actual deployment output and build logs.
-5. Vercel Hobby is intended for personal, non-commercial use. It includes limited active CPU time. A public AI endpoint can exhaust the included quota or become slow under concurrent use.
-6. The in-memory model cache is per serverless instance, not shared across all instances. Cold starts may reload the model.
-7. The starter knowledge file contains only a few safe facts. Add verified WebZHost documentation before relying on it for support.
-8. Review the Falcon-LLM license before redistribution or commercial use.
+- Vercel `/tmp` is temporary. A new/cold Function instance may download the model again. This project does not provide permanent model storage inside Vercel.
+- The 90M-parameter model is very small and its Bangla ability and instruction-following are limited. Prompting and a small keyword-based knowledge retrieval step do not guarantee correct answers.
+- The included knowledge file is deliberately conservative. It does not contain the full WebZHost documentation. Add verified facts from official documentation before expecting detailed support answers.
+- The first request can be slow due to model download, native runtime startup, and model loading. Warm instances may reuse the model, but Vercel does not guarantee instance persistence.
+- Vercel Hobby resource, execution-duration, bundle, and usage limits can change. Check the current Vercel plan documentation before relying on this as a public production service. A 300-second maximum is a ceiling, not a performance target.
+- `node-llama-cpp` relies on native components. Validate the deployment on the actual Vercel runtime; local success alone is not proof of deployment success.
+- Check the model's license and Hugging Face repository access before redistribution or commercial use.
 
-## Deploy from a phone
+## Endpoints
 
-1. Create a new GitHub repository named `WebZHost-AI`.
-2. Upload **all files and folders from this project ZIP** to the repository root. Do not upload the outer ZIP folder as a nested directory.
-3. In Vercel, choose **Add New → Project**, import `WebZHost-AI`, and keep the defaults.
-4. Set the Node.js version to 20 or newer if prompted. No environment variables are required.
-5. Deploy. The build script downloads the model from Hugging Face. This requires network access during the build.
-6. Open these URLs on the deployed domain:
-   - `/api/health`
-   - `/api/model`
-   - `/`
-7. Only if both diagnostics pass, test a short question in the chat. Check Vercel Runtime Logs if it fails.
+- `GET /api/health` — service status.
+- `GET /api/model` — checks the Hugging Face model URL and reports its file size when available.
+- `POST /api/chat` — JSON body: `{ "message": "your WebZHost question" }`.
 
-## Connecting from WebZHost
+## Embedding
 
-After the separate AI site works, use its deployed URL in an iframe, for example:
+Use the deployed URL of this project in an iframe on WebZHost, for example:
 
 ```html
-<iframe
-  src="https://YOUR-WEBZHOST-AI.vercel.app/"
-  title="WebZHost AI"
-  loading="lazy"
-  style="width:100%;height:720px;border:0;border-radius:16px"
-></iframe>
+<iframe src="https://YOUR-WEBZHOST-AI.vercel.app/" title="WebZHost AI" loading="lazy" style="width:100%;height:720px;border:0;border-radius:16px"></iframe>
 ```
-
-Replace the example domain with your real Vercel deployment URL.
-
-## Model source
-
-Falcon-H1-Tiny-90M-Instruct GGUF, Q4_K_M:
-https://huggingface.co/tiiuae/Falcon-H1-Tiny-90M-Instruct-GGUF
-
-The model is not included in this ZIP; Vercel downloads it during the build.
