@@ -1,15 +1,13 @@
 {
-  "name": "webzhost-ai",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "node scripts/download-model.mjs"
-  },
-  "dependencies": {
-    "node-llama-cpp": "3.22.3"
-  },
-  "engines": {
-    "node": ">=20"
-  }
+"name": "webzhost-ai",
+"version": "1.0.0",
+"private": true,
+"type": "module",
+"scripts": {},
+"dependencies": {
+"node-llama-cpp": "3.22.3"
+},
+"engines": {
+"node": ">=20"
+}
 }
