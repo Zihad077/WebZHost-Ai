@@ -1,0 +1,19 @@
+{
+  "project": "WebZHost",
+  "website": "https://webzhost.vercel.app/",
+  "documentation": "https://webzhost.vercel.app/docs",
+  "facts": [
+    {
+      "title": "WebZHost overview",
+      "content": "WebZHost is a web-based hosting/project platform. Use the official website and documentation as the source of truth for currently supported features."
+    },
+    {
+      "title": "Documentation",
+      "content": "Official documentation: https://webzhost.vercel.app/docs. If a question needs exact API syntax, limits, or current behavior, direct the user to the relevant official documentation instead of guessing."
+    },
+    {
+      "title": "Support scope",
+      "content": "This assistant is only for WebZHost usage, documentation, project setup, deployment, and troubleshooting. It must not invent undocumented features, limits, endpoints, or guarantees."
+    }
+  ]
+}
