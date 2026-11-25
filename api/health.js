@@ -3,8 +3,9 @@ export default function handler(req, res) {
   return res.status(200).json({
     ok: true,
     service: "WebZHost AI",
-    stage: "backend-test",
+    stage: "huggingface-runtime-model",
+    modelSource: "Hugging Face",
     modelConfigured: true,
-    note: "Health check only. It does not prove that the model has loaded or generated a reply."
+    note: "Health check only. Use /api/model to verify the hosted model file and POST /api/chat to test inference."
   });
 }

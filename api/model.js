@@ -1,26 +1,44 @@
-import { access, stat } from "node:fs/promises";
-import path from "node:path";
+const MODEL_URL = "https://huggingface.co/Zihad077/webzhost-ai-model/resolve/main/Falcon-H1-Tiny-90M-Instruct-Q4_K_M.gguf";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  const modelPath = path.join(process.cwd(), "models", "Falcon-H1-Tiny-90M-Instruct-Q4_K_M.gguf");
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    return res.status(405).json({ ok: false, error: "GET required" });
+  }
+
   try {
-    await access(modelPath);
-    const info = await stat(modelPath);
+    const response = await fetch(MODEL_URL, {
+      method: "HEAD",
+      redirect: "follow",
+      signal: AbortSignal.timeout(20000)
+    });
+
+    if (!response.ok) {
+      return res.status(502).json({
+        ok: false,
+        modelAvailable: false,
+        status: response.status,
+        error: "Hugging Face could not provide the model file. Check that the repository and filename are correct and the repository is public."
+      });
+    }
+
+    const length = Number(response.headers.get("content-length") || 0);
     return res.status(200).json({
       ok: true,
-      modelFileFound: true,
-      fileSizeMB: Number((info.size / 1024 / 1024).toFixed(1)),
+      modelAvailable: true,
       model: "Falcon-H1-Tiny-90M-Instruct Q4_K_M",
-      loadedIntoMemory: false,
-      note: "This endpoint checks whether the bundled model file is present. It does not load the model."
+      repository: "Zihad077/webzhost-ai-model",
+      file: "Falcon-H1-Tiny-90M-Instruct-Q4_K_M.gguf",
+      fileSizeMB: length ? Number((length / 1024 / 1024).toFixed(1)) : null,
+      storage: "Hugging Face (persistent source; Vercel caches a temporary copy per warm instance)",
+      note: "This checks the hosted file only. It does not load the model or prove inference works."
     });
-  } catch {
-    return res.status(500).json({
+  } catch (error) {
+    return res.status(502).json({
       ok: false,
-      modelFileFound: false,
-      error: "Model file is missing from the deployed Function bundle.",
-      hint: "Check the Vercel build log and the functions.includeFiles setting."
+      modelAvailable: false,
+      error: "Could not reach the Hugging Face model file.",
+      details: String(error?.message || error).slice(0, 500)
     });
   }
 }
