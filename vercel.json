@@ -1,8 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/*.js": {
-      "maxDuration": 300
+    "api/chat.js": {
+      "includeFiles": "models/*.gguf",
+      "maxDuration": 60
+    },
+    "api/health.js": {
+      "maxDuration": 10
     }
-  }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "public"
 }
