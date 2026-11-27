@@ -72,6 +72,11 @@ function deterministic(q) {
 }
 function isWeb(q) { return /webzhost|web z host|ওয়েবজহোস্ট|ওয়েবজহোস্ট|এই প্ল্যাটফর্ম|এই সাইট|এই ওয়েবসাইট|এই ওয়েবসাইট/i.test(q); }
 function isGeneralCode(q) { return /\b(html|css|javascript|typescript|python|node\.js|json|code|program|function|bug|error|কোড|প্রোগ্রাম|জাভাস্ক্রিপ্ট|পাইথন)\b/i.test(q); }
+function shortTopicReply(q) {
+ const s=q.trim().toLowerCase();
+ if (/^(python|পাইথন)$/.test(s)) return /[\u0980-\u09ff]/.test(q) ? 'Python নিয়ে কী সাহায্য দরকার—কোড লেখা, error ঠিক করা, নাকি কোনো বিষয় শেখা?' : 'What do you need help with in Python—writing code, fixing an error, or learning a topic?';
+ return null;
+}
 function sendJson(res, status, data) { return res.status(status).json(data); }
 export default async function handler(req,res) {
  res.setHeader('Cache-Control','no-store');
@@ -82,6 +87,7 @@ export default async function handler(req,res) {
   if(!message) return sendJson(res,400,{ok:false,error:'Message required'});
   if(message.length>1800) return sendJson(res,413,{ok:false,error:'Message is too long (limit 1,800 characters).'});
   const fixed=deterministic(message); if(fixed) return sendJson(res,200,{ok:true,answer:fixed,source:'verified WebZHost facts',timingsMs:{total:Date.now()-started}});
+  const topicReply=shortTopicReply(message); if(topicReply) return sendJson(res,200,{ok:true,answer:topicReply,source:'clarification',timingsMs:{total:Date.now()-started}});
   const found=retrieve(message);
   const bn=/[\\u0980-\\u09ff]/.test(message);
   if(found.length && (isWeb(message) || /telegram|bot|project|backup|plan|payment|admin|upload|runtime|webhook|টেলিগ্রাম|বট|প্রজেক্ট|ব্যাকআপ|প্ল্যান|পেমেন্ট|অ্যাডমিন|আপলোড/i.test(message))) {
