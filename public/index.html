@@ -76,6 +76,15 @@ function deterministic(q) {
 }
 function isWeb(q) { return /webzhost|web z host|ওয়েবজহোস্ট|ওয়েবজহোস্ট|এই প্ল্যাটফর্ম|এই সাইট|এই ওয়েবসাইট|এই ওয়েবসাইট/i.test(q); }
 function isGeneralCode(q) { return /\b(html|css|javascript|typescript|python|node\.js|json|code|program|function|bug|error|কোড|প্রোগ্রাম|জাভাস্ক্রিপ্ট|পাইথন)\b/i.test(q); }
+function shortTopicReply(q) {
+ const s=String(q||'').trim();
+ if (/^(python|পাইথন)$/i.test(s)) return /[\u0980-\u09ff]/.test(s) ? 'Python নিয়ে কী জানতে চান? আমি Python-এর basics, syntax, code example, error fixing বা project তৈরি করতে সাহায্য করতে পারি।' : 'What would you like to know about Python? I can help with basics, syntax, code examples, debugging, or building a project.';
+ if (/^(javascript|js)$/i.test(s)) return 'What would you like help with in JavaScript—basics, syntax, DOM, debugging, or a code example?';
+ if (/^(html|css)$/i.test(s)) return `What would you like to know about ${s.toUpperCase()}? I can explain it or help write an example.`;
+ if (/^(hello|hi|hey)$/i.test(s)) return 'Hello! What would you like help with?';
+ if (/^(হাই|হ্যালো|আসসালামু আলাইকুম)$/i.test(s)) return 'হ্যালো! কী বিষয়ে সাহায্য করতে পারি?';
+ return null;
+}
 async function answerLocal(message,el){const fixed=deterministic(message);if(fixed)return fixed;const topic=shortTopicReply(message);if(topic)return topic;const found=retrieve(message);const bn=/[\u0980-\u09ff]/.test(message);if(found.length&&(isWeb(message)||/telegram|bot|project|backup|plan|payment|admin|upload|runtime|webhook|টেলিগ্রাম|বট|প্রজেক্ট|ব্যাকআপ|প্ল্যান|পেমেন্ট|অ্যাডমিন|আপলোড/i.test(message)))return answerFromKB(message,found,bn);if(!found.length&&isWeb(message))return bn?'এই বিষয়টি সরবরাহ করা WebZHost source থেকে যাচাই করতে পারছি না। বিস্তারিত জানতে https://webzhost.vercel.app/docs দেখুন।':'I cannot verify this WebZHost-specific detail from the supplied source. Check https://webzhost.vercel.app/docs.';
  const context=found.map(x=>`[${x.t}] ${x.v}`).join('\n');const messages=[{role:'system',content:SYSTEM+'\n\nVERIFIED WEBZHOST FACTS:\n'+(context||'No relevant WebZHost facts were found.')} ,...history.slice(-5).map(m=>({role:m.role==='bot'?'assistant':m.role,content:m.content})),{role:'user',content:message}];
  let answer='';const stream=await wllama.createChatCompletion({messages,max_tokens:180,temperature:0.55,top_p:0.9,top_k:40,stream:true});for await(const chunk of stream){const part=chunk.choices?.[0]?.delta?.content||'';if(part){answer+=part;el.textContent=answer;chat.scrollTop=chat.scrollHeight}}return answer.trim()||'I could not generate a response. Please try a shorter question.';}
