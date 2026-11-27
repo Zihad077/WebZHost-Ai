@@ -1,9 +1,9 @@
 {
-  "name": "webzhost-ai",
-  "version": "2.0.0",
+  "name": "webzhost-ai-local",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "build": "node scripts/download-model.mjs" },
-  "dependencies": { "node-llama-cpp": "3.22.3" },
-  "engines": { "node": ">=20" }
+  "scripts": {
+    "build": "node scripts/verify-static.mjs"
+  }
 }
